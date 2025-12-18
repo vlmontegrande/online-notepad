@@ -1,14 +1,15 @@
 // Handle GET response from server
 
 function handleResponse(xhr) {
+  console.log(xhr.responseText);
   if(xhr.status == 200) {
     console.log("GET request was successful!");
     let element = document.getElementById("notes");
-    element.value = "GET request was successful!";
+    element.value = xhr.responseText;
   } else {
     console.log("GET request was unsuccessful. :(");
     let element = document.getElementById("notes");
-    element.value = "GET request was unsuccessful. :(";
+    element.value = xhr.responseText;
   }
 }
 
@@ -16,14 +17,15 @@ function handleResponse(xhr) {
 
 function getText() {
   let xhr = new XMLHttpRequest();
-  xhr.open("GET", "https://httpbin.org/get", true);
+  xhr.open("GET", "https://httpbin.org/ip", true);
   xhr.onload = function(){
     handleResponse(xhr);
   };
+  xhr.responseType = "text";
   xhr.send(null);
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  let button = document.getElementById("submit");
+  let button = document.getElementById("get-button");
   button.addEventListener("click", getText);
 });
