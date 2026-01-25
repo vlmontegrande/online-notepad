@@ -1,15 +1,14 @@
 // Handle GET response from server
 
-function handleResponse(xhr) {
+function handleGetResponse(xhr) {
   console.log(xhr.responseText);
   if(xhr.status == 200) {
     console.log("GET request was successful!");
-    let element = document.getElementById("notes");
+    const element = document.getElementById("notes");
     element.value = xhr.responseText;
   } else {
     console.log("GET request was unsuccessful. :(");
-    let element = document.getElementById("notes");
-    element.value = xhr.responseText;
+    alert("The GET request was unsuccessful. :(");
   }
 }
 
@@ -17,15 +16,30 @@ function handleResponse(xhr) {
 
 function getText() {
   let xhr = new XMLHttpRequest();
-  xhr.open("GET", "https://httpbin.org/ip", true);
+  xhr.open("GET", "https://httpbin.org/get", true);
   xhr.onload = function(){
-    handleResponse(xhr);
+    handleGetResponse(xhr);
   };
   xhr.responseType = "text";
   xhr.send(null);
 }
 
+// Create request to post data in database
+
+function postText() {
+  const element = document.getElementById("notes");
+  const text = element.value;
+
+  let xhr = new XMLHttpRequest();
+  xhr.open("POST", "https://httpbin.org/post", true);
+  xhr.setRequestHeader("Content-Type", "text/plain");
+  xhr.onload = () => xhr.status === 200 ? alert("The POST request was successful!") : alert("The request failed...");
+  xhr.send(text);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
-  let button = document.getElementById("get-button");
-  button.addEventListener("click", getText);
+  let getButton = document.getElementById("get-button");
+  let postButton = document.getElementById("post-button");
+  getButton.addEventListener("click", getText);
+  postButton.addEventListener("click", postText);
 });
