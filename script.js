@@ -15,7 +15,7 @@ function getText() {
 function handleGetResponse(xhr) {
   if(xhr.status === 200) {
     console.log("GET request was successful!");
-    setTimeout(getText, 3000);
+    // setTimeout(getText, 3000);
   } else {
     console.log("GET request was unsuccessful. :(");
     console.log(xhr.responseText);
@@ -51,7 +51,7 @@ function debounceInputs() {
   };
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
   const getButton = document.getElementById("get-button");
   const postButton = document.getElementById("post-button");
   const textArea = document.getElementById("notes");
@@ -59,4 +59,9 @@ window.addEventListener("DOMContentLoaded", () => {
   getText();
   postButton.addEventListener("click", postText);
   textArea.addEventListener("input", debounceInputs());
+
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "hidden") postText();
+    else if(document.visibilityState === "visible") getText();
+  });
 });
