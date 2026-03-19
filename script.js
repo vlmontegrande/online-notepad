@@ -51,17 +51,24 @@ function debounceInputs() {
   };
 }
 
+const textArea = document.getElementById("notes");
+
 document.addEventListener("DOMContentLoaded", () => {
-  const getButton = document.getElementById("get-button");
-  const postButton = document.getElementById("post-button");
-  const textArea = document.getElementById("notes");
-  getButton.addEventListener("click", getText);
-  getText();
-  postButton.addEventListener("click", postText);
   textArea.addEventListener("input", debounceInputs());
+  getText();
 
   document.addEventListener("visibilitychange", () => {
     if(document.visibilityState === "hidden") postText();
     else if(document.visibilityState === "visible") getText();
   });
+});
+
+textArea.addEventListener("keydown", (e) => {
+  if(e.key === "Tab") {
+    e.preventDefault();
+    const start = textArea.selectionStart;
+    const end = textArea.selectionEnd;
+    textArea.value = textArea.value.substring(0, start) + "  " + textArea.value.substring(end);
+    textArea.selectionStart = start + 2;
+  }
 });
