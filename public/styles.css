@@ -28,18 +28,15 @@ h1 {
   width: 80vw;
   resize: none;
   margin: 0 auto;
-  height: 5000px;
-
+  min-height: 5000px;
   font-size: 1.5rem;
   line-height: 1.5;
   padding: 10px;
   border-radius: 8px;
-  border-width: 2px;
-  border-color: black;
+  border: 2px solid black;
 }
 
 #notes:focus {
-  border-radius: 8px;
-  border-width: 2px;
-  border-color: black;
+  outline: none;
+  border: 2px solid black;
 }
