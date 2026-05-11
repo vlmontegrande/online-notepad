@@ -1,0 +1,47 @@
+import mysql from "mysql2/promise";
+import express from "express";
+import session from "express-session";
+import bcrypt from "bcrypt";
+
+const db = await mysql.createConnection({
+  host: "localhost",
+  user: "notepad",
+  password: "password",
+  database: "online_notepad"
+});
+
+const api = express.Router();
+
+api.post("/api/login", async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ success: false, error: 'Username and password required' });
+
+  try {
+    const [rows] = await db.query("SELECT id, username, password_hash FROM users WHERE username = ?", [username]);
+    if (rows.length === 0 || !(await bcrypt.compare(password, rows[0].password_hash))) return res.status(401).json({ success: false, error: "Invalid credentials" });
+    
+    const user = rows[0];
+    req.session.user = { id: user.id, username: user.username };
+    res.json({ success: true, data: req.session.user });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+api.get("/api/notes", async (req, res) => {
+  const [rows] = await db.query("SELECT id, content FROM notes ORDER BY id DESC LIMIT 1");
+  if (rows.length === 0) return res.json({ id: null, content: "" });
+  res.json(rows[0]);
+});
+
+api.post("/api/notes", async (req, res) => {
+  const { content, lastKnownId } = req.body;
+  const [rows] = await db.query("SELECT MAX(id) AS latestId FROM notes");
+  const latestId = rows[0].latestId;
+  if (latestId !== lastKnownId) return res.status(409).json({ error: "Conflict" });
+  const [result] = await db.query("INSERT INTO notes (content) VALUES (?)", [content]);
+  res.json({ id: result.insertId });
+});
+
+export default api;
