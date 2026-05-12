@@ -39,7 +39,7 @@ function poll() {
   pollTimeoutId = null;
   if (!canPoll()) return;
   const startedAt = Date.now();
-  pollXhr = request({ method: "GET", url: "/notes" }, {
+  pollXhr = request({ method: "GET", url: "/api/notes" }, {
     onload: (xhr) => {
       if (xhr.status !== 200) return;
       const data = JSON.parse(xhr.responseText);
@@ -62,7 +62,7 @@ function poll() {
 
 function getText() {
   cancelPoll();
-  request({ method: "GET", url: "/notes" }, {
+  request({ method: "GET", url: "/api/notes" }, {
     onload: (xhr) => {
       if (xhr.status === 200) {
         const data = JSON.parse(xhr.responseText);
@@ -82,7 +82,7 @@ function postText() {
   cancelPoll();
   const content = document.getElementById("notes").value;
   let willRecover = false;
-  request({ method: "POST", url: "/notes", body: { content, lastKnownId } }, {
+  request({ method: "POST", url: "/api/notes", body: { content, lastKnownId } }, {
     onload: (xhr) => {
       if (xhr.status === 200) {
         const data = JSON.parse(xhr.responseText);
