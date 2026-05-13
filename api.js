@@ -1,7 +1,10 @@
 import mysql from "mysql2/promise";
 import express from "express";
-import session from "express-session";
 import bcrypt from "bcrypt";
+
+import { requireAuthAPI } from "./middleware/auth.js";
+
+const saltRounds = 12;
 
 const db = await mysql.createConnection({
   host: "localhost",
@@ -12,14 +15,15 @@ const db = await mysql.createConnection({
 
 const api = express.Router();
 
-api.post("/api/login", async (req, res) => {
+// Unauthenticated API routes
+
+api.post("/login", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ success: false, error: 'Username and password required' });
 
   try {
     const [rows] = await db.query("SELECT id, username, password_hash FROM users WHERE username = ?", [username]);
     if (rows.length === 0 || !(await bcrypt.compare(password, rows[0].password_hash))) return res.status(401).json({ success: false, error: "Invalid credentials" });
-    
     const user = rows[0];
     req.session.user = { id: user.id, username: user.username };
     res.json({ success: true, data: req.session.user });
@@ -29,13 +33,23 @@ api.post("/api/login", async (req, res) => {
   }
 });
 
-api.get("/api/notes", async (req, res) => {
+api.get('/logout', (req, res) => {
+    req.session.destroy(() => {
+      res.json({ success: true })
+    });
+});
+
+// Authenticated API routes
+
+api.use(requireAuthAPI);
+
+api.get("/notes", async (req, res) => {
   const [rows] = await db.query("SELECT id, content FROM notes ORDER BY id DESC LIMIT 1");
   if (rows.length === 0) return res.json({ id: null, content: "" });
   res.json(rows[0]);
 });
 
-api.post("/api/notes", async (req, res) => {
+api.post("/notes", async (req, res) => {
   const { content, lastKnownId } = req.body;
   const [rows] = await db.query("SELECT MAX(id) AS latestId FROM notes");
   const latestId = rows[0].latestId;
@@ -43,5 +57,20 @@ api.post("/api/notes", async (req, res) => {
   const [result] = await db.query("INSERT INTO notes (content) VALUES (?)", [content]);
   res.json({ id: result.insertId });
 });
+
+api.get("/bcrypt", async (req, res) => {
+  const password = req.query.password;
+  const hash = await bcrypt.hash(password, saltRounds);
+  res.send(hash);
+});
+
+api.get("/compare", async (req, res) => {
+  const username = req.query.username;
+  const password = req.query.password;
+  const [ users ] = await db.query("SELECT password_hash FROM users WHERE username=?", [username]);
+  const match = await bcrypt.compare(password, users[0].password_hash);
+  res.send(match);
+});
+
 
 export default api;
