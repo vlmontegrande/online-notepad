@@ -41,15 +41,13 @@ api.get('/logout', (req, res) => {
 
 // Authenticated API routes
 
-api.use(requireAuthAPI);
-
-api.get("/notes", async (req, res) => {
+api.get("/notes", requireAuthAPI, async (req, res) => {
   const [rows] = await db.query("SELECT id, content FROM notes ORDER BY id DESC LIMIT 1");
   if (rows.length === 0) return res.json({ id: null, content: "" });
   res.json(rows[0]);
 });
 
-api.post("/notes", async (req, res) => {
+api.post("/notes", requireAuthAPI, async (req, res) => {
   const { content, lastKnownId } = req.body;
   const [rows] = await db.query("SELECT MAX(id) AS latestId FROM notes");
   const latestId = rows[0].latestId;
@@ -58,18 +56,25 @@ api.post("/notes", async (req, res) => {
   res.json({ id: result.insertId });
 });
 
-api.get("/bcrypt", async (req, res) => {
+api.get("/bcrypt", requireAuthAPI, async (req, res) => {
   const password = req.query.password;
   const hash = await bcrypt.hash(password, saltRounds);
   res.send(hash);
 });
 
-api.get("/compare", async (req, res) => {
+api.get("/compare", requireAuthAPI, async (req, res) => {
   const username = req.query.username;
   const password = req.query.password;
   const [ users ] = await db.query("SELECT password_hash FROM users WHERE username=?", [username]);
   const match = await bcrypt.compare(password, users[0].password_hash);
   res.send(match);
+});
+
+api.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: "API route not found",
+  });
 });
 
 

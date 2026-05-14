@@ -12,10 +12,12 @@ router.get("/login", (req, res) => {
 
 // Authenticated page routes
 
-router.use(requireAuthPage);
-
-router.get("/", (req, res) => {
+router.get("/", requireAuthPage, (req, res) => {
   res.sendFile("index.html", { root: "views" });
+});
+
+router.use((req, res) => {
+  res.sendFile("404.html", { root: "views" });
 });
 
 export default router;
