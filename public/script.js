@@ -65,6 +65,8 @@ function poll() {
   });
 }
 
+// Overwrites whatever's currently in the textarea. 
+// Called when the page loads and when the page becomes visible.
 function loadNote() {
   cancelPoll();
   sendRequest({ method: "GET", url: "/api/notes" }, {
@@ -83,6 +85,8 @@ function loadNote() {
   });
 }
 
+// On conflict, it gets the latest notes entry and overwrites the textarea.
+// Called after debounced inputs from the user.
 function saveNote() {
   cancelPoll();
   const content = document.getElementById("notes").value;
