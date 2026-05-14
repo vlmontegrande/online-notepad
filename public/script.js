@@ -4,7 +4,12 @@ let isTyping = false;
 let pollXhr = null;
 let pollTimeoutId = null;
 
-function request({ method, url, body }, handlers = {}) {
+function setStatus(msg) {
+  document.getElementById("status").textContent = msg;
+  console.log(msg);
+}
+
+function sendRequest({ method, url, body }, handlers = {}) {
   const xhr = new XMLHttpRequest();
   xhr.open(method, url, true);
   if (body !== undefined) xhr.setRequestHeader("Content-Type", "application/json");
@@ -39,7 +44,7 @@ function poll() {
   pollTimeoutId = null;
   if (!canPoll()) return;
   const startedAt = Date.now();
-  pollXhr = request({ method: "GET", url: "/api/notes" }, {
+  pollXhr = sendRequest({ method: "GET", url: "/api/notes" }, {
     onload: (xhr) => {
       if (xhr.status !== 200) return;
       const data = JSON.parse(xhr.responseText);
@@ -60,9 +65,9 @@ function poll() {
   });
 }
 
-function getText() {
+function loadNote() {
   cancelPoll();
-  request({ method: "GET", url: "/api/notes" }, {
+  sendRequest({ method: "GET", url: "/api/notes" }, {
     onload: (xhr) => {
       if (xhr.status === 200) {
         const data = JSON.parse(xhr.responseText);
@@ -78,27 +83,36 @@ function getText() {
   });
 }
 
-function postText() {
+function saveNote() {
   cancelPoll();
   const content = document.getElementById("notes").value;
-  let willRecover = false;
-  request({ method: "POST", url: "/api/notes", body: { content, lastKnownId } }, {
+  sendRequest({ method: "POST", url: "/api/notes", body: { content, lastKnownId } }, {
     onload: (xhr) => {
       if (xhr.status === 200) {
         const data = JSON.parse(xhr.responseText);
         lastKnownId = data.id;
-        console.log("POST successful");
+        setStatus("Saved!");
       } else if (xhr.status === 409) {
-        console.log("Conflict, re-fetching");
-        willRecover = true;
-        getText();
+        setStatus("Conflict, re-fetching...");
+        sendRequest({ method: "GET", url: "/api/notes" }, {
+          onload: (xhr2) => {
+            if (xhr2.status === 200) {
+              const data = JSON.parse(xhr2.responseText);
+              lastKnownId = data.id;
+              document.getElementById("notes").value = data.content;
+              setStatus("Saved!");
+            } else {
+              setStatus("GET request failed");
+            }
+          },
+          onloadend: () => { isTyping = false; },
+        });
       } else {
         alert("POST request failed");
       }
     },
-    onloadend: () => { if (!willRecover) isTyping = false; },
+    onloadend: () => { isTyping = false; },
   });
-  document.getElementById("status").textContent = "Saved!";
 }
 
 function debounceInputs() {
@@ -106,18 +120,18 @@ function debounceInputs() {
   return () => {
     isTyping = true;
     cancelPoll();
-    document.getElementById("status").textContent = "Saving...";
+    setStatus("Saving...");
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(postText, 2000);
+    timeoutId = setTimeout(saveNote, 2000);
   };
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  getText();
+  loadNote();
   document.getElementById("notes").addEventListener("input", debounceInputs());
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") postText();
-    else if (document.visibilityState === "visible") getText();
+    if (document.visibilityState === "hidden") saveNote();
+    else if (document.visibilityState === "visible") loadNote();
   });
 });
 
