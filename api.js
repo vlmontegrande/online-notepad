@@ -3,7 +3,7 @@ import bcryptjs from "bcryptjs";
 import rateLimit from "express-rate-limit";
 
 import { requireAuthAPI } from "./middleware/auth.js";
-import db from "./database.js";
+import db from "./db.js";
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
