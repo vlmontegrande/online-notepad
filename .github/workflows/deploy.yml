@@ -52,6 +52,14 @@ jobs:
             StrictHostKeyChecking no
           EOF
 
+      - name: Test cloudflared tunnel
+        run: |
+          cloudflared access ssh \
+            --hostname ${{ secrets.SSH_HOST }} \
+            --service-token-id ${{ secrets.CF_ACCESS_CLIENT_ID }} \
+            --service-token-secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }} \
+            --loglevel debug < /dev/null
+
       - name: Pull and restart
         run: |
           ssh -vvv ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
