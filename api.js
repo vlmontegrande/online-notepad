@@ -1,23 +1,23 @@
-import mysql from "mysql2/promise";
 import express from "express";
 import bcryptjs from "bcryptjs";
+import rateLimit from "express-rate-limit";
 
 import { requireAuthAPI } from "./middleware/auth.js";
+import db from "./database.js";
 
-const saltRounds = 12;
-
-const db = await mysql.createConnection({
-  host: "localhost",
-  user: "notepad",
-  password: "password",
-  database: "online_notepad"
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  handler: (req, res) => {
+    res.status(429).json({ success: false, error: "Too many requests, try again later." });
+  }
 });
 
 const api = express.Router();
 
 // Unauthenticated API routes
 
-api.post("/login", async (req, res) => {
+api.post("/login", limiter, async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ success: false, error: 'Username and password required' });
 

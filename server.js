@@ -1,34 +1,33 @@
-import mysql from "mysql2/promise";
 import express from "express";
 import session from "express-session";
-import "dotenv/config";
-import MySQLSession from "express-mysql-session";
 
 import router from "./routes/app.js";
 import api from "./api.js";
+import db from "./database.js";
+import MySQLSession from "express-mysql-session";
+import "dotenv/config";
+
+const port = process.env.PORT || 8080;
+const isProduction = process.env.NODE_ENV === "production";
 
 const MySQLStore = MySQLSession(session);
-
-const db = await mysql.createConnection({
-  host: "localhost",
-  user: "notepad",
-  password: "password",
-  database: "online_notepad"
-});
-
 const sessionStore = new MySQLStore({}, db);
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(express.static('public'))
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
+  store: sessionStore,
   cookie: {
     httpOnly: true,
-    secure: false,
+    secure: isProduction,
+    sameSite: "lax",
     maxAge: 1000 * 60 * 60 * 24 * 365
   }
 }))
@@ -37,4 +36,10 @@ app.use(session({
 app.use("/api", api);
 app.use("/", router);
 
-app.listen(8080, () => console.log("Running on port 8080!"));
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ success: false, error: "Internal server error" });
+});
+
+app.listen(port, () => console.log(`Running on port ${port}!`));
