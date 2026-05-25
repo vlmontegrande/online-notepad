@@ -48,7 +48,7 @@ function poll() {
     onload: (xhr) => {
       if (xhr.status !== 200) return;
       const data = JSON.parse(xhr.responseText);
-      if (data.id === lastKnownId || !canPoll()) return;
+      if (data.id === lastKnownId || isTyping || document.visibilityState !== "visible") return;
       lastKnownId = data.id;
       const notes = document.getElementById("notes");
       const s = notes.selectionStart, e = notes.selectionEnd;
