@@ -46,26 +46,14 @@ jobs:
         run: |
           cat <<EOF >> ~/.ssh/config
           Host ${{ secrets.SSH_HOST }}
-            ProxyCommand cloudflared access ssh --hostname %h --loglevel debug \
+            ProxyCommand cloudflared access ssh --hostname %h \
               --service-token-id ${{ secrets.CF_ACCESS_CLIENT_ID }} \
               --service-token-secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
             StrictHostKeyChecking no
           EOF
 
-      - name: Test cloudflared tunnel
-        run: |
-          # Bound the run so cloudflared's retry/origin errors surface instead of
-          # hanging ~2min; capture stderr (where cloudflared logs go).
-          timeout 30 cloudflared access ssh \
-            --hostname ${{ secrets.SSH_HOST }} \
-            --service-token-id ${{ secrets.CF_ACCESS_CLIENT_ID }} \
-            --service-token-secret ${{ secrets.CF_ACCESS_CLIENT_SECRET }} \
-            --loglevel debug > tunnel.log 2>&1 < /dev/null || true
-          echo "=== cloudflared output ==="
-          cat tunnel.log
-
       - name: Pull and restart
         run: |
-          ssh -vvv ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "\
             docker compose -f /home/vlmontegrande/online-notepad/docker-compose.yml pull && \
             docker compose -f /home/vlmontegrande/online-notepad/docker-compose.yml up -d"
