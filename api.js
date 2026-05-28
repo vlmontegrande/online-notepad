@@ -22,6 +22,7 @@ api.post("/login", limiter, async (req, res) => {
   if (!username || !password) return res.status(400).json({ success: false, error: 'Username and password required' });
 
   try {
+    username = username.toLowerCase();
     const [rows] = await db.query("SELECT id, username, password_hash FROM users WHERE username = ?", [username]);
     if (rows.length === 0 || !(await bcryptjs.compare(password, rows[0].password_hash))) return res.status(401).json({ success: false, error: "Invalid credentials" });
     const user = rows[0];
