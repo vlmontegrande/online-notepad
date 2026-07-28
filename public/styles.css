@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 4rem;
 }
 
 h1 {
@@ -29,6 +30,7 @@ h1 {
   resize: none;
   margin: 0 auto;
   min-height: 5000px;
+  field-sizing: content;
   font-size: 1.5rem;
   line-height: 1.5;
   padding: 10px;

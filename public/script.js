@@ -1,8 +1,24 @@
+const FIELD_SIZING_SUPPORTED = CSS.supports("field-sizing: content");
+
 let lastKnownId = null;
 let inFlight = 0;
 let isTyping = false;
 let pollXhr = null;
 let pollTimeoutId = null;
+
+// Fallback for the field-sizing property
+
+if(!FIELD_SIZING_SUPPORTED) {
+  let notes = document.getElementById("notes");
+  notes.style.height = notes.scrollHeight + "px";
+  notes.style.overflowY = "hidden";
+  notes.addEventListener("input", () => {
+    notes.style.height = "auto";
+    notes.style.height = notes.scrollHeight + "px";
+  });
+}
+
+// Note saving and fetching logic
 
 function setStatus(msg) {
   document.getElementById("status").textContent = msg;
